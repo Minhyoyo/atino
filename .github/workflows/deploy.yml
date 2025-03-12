@@ -4,40 +4,46 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'atino.html'
+      - 'deployment.yaml'
 
 jobs:
-  build:
-    name: Build and Push Docker Image
+  build-and-push:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Log in to DockerHub
-        run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+    - name: Extract current version
+      run: |
+        CURRENT_VERSION=$(grep -oP 'image: YOUR_DOCKERHUB_USERNAME/atino:v\K[0-9]+\.[0-9]+' deployment.yaml)
+        NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2+1}')
+        echo "NEW_VERSION=v$NEW_VERSION" >> $GITHUB_ENV
+        echo "Next version: v$NEW_VERSION"
 
-      - name: Build and Push Docker Image
-        run: |
-          IMAGE_NAME=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/atino
-          IMAGE_TAG=$(date +%s)
-          docker build -t $IMAGE_NAME:$IMAGE_TAG .
-          docker push $IMAGE_NAME:$IMAGE_TAG
-          echo "IMAGE=$IMAGE_NAME:$IMAGE_TAG" >> $GITHUB_ENV
+    - name: Login to DockerHub
+      run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-  deploy:
-    name: Deploy to Kubernetes
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Build Docker image
+      run: |
+        docker build -t YOUR_DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }} .
+        docker tag YOUR_DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }} YOUR_DOCKERHUB_USERNAME/atino:latest
 
-      - name: Set up kubectl
-        run: |
-          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
-          export KUBECONFIG=kubeconfig.yaml
+    - name: Push Docker image
+      run: |
+        docker push YOUR_DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }}
+        docker push YOUR_DOCKERHUB_USERNAME/atino:latest
 
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl set image deployment/atino-web atino=${{ env.IMAGE }} -n default
-          kubectl rollout status deployment/atino-web -n default
+    - name: Update deployment.yaml
+      run: |
+        sed -i "s|image: YOUR_DOCKERHUB_USERNAME/atino:v[0-9]\+\.[0-9]\+|image: YOUR_DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }}|g" deployment.yaml
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add deployment.yaml
+        git commit -m "Update deployment image to ${{ env.NEW_VERSION }}"
+        git push
