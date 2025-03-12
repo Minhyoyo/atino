@@ -18,7 +18,7 @@ jobs:
 
     - name: Extract current version
       run: |
-        CURRENT_VERSION=$(grep -oP 'image: YOUR_DOCKERHUB_USERNAME/atino:v\K[0-9]+\.[0-9]+' deployment.yaml)
+        CURRENT_VERSION=$(grep -oP 'image: DOCKERHUB_USERNAME/atino:v\K[0-9]+\.[0-9]+' deployment.yaml)
         NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2+1}')
         echo "NEW_VERSION=v$NEW_VERSION" >> $GITHUB_ENV
         echo "Next version: v$NEW_VERSION"
@@ -28,17 +28,17 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t YOUR_DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }} .
-        docker tag YOUR_DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }} YOUR_DOCKERHUB_USERNAME/atino:latest
+        docker build -t DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }} .
+        docker tag DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }} DOCKERHUB_USERNAME/atino:latest
 
     - name: Push Docker image
       run: |
-        docker push YOUR_DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }}
-        docker push YOUR_DOCKERHUB_USERNAME/atino:latest
+        docker push DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }}
+        docker push DOCKERHUB_USERNAME/atino:latest
 
     - name: Update deployment.yaml
       run: |
-        sed -i "s|image: YOUR_DOCKERHUB_USERNAME/atino:v[0-9]\+\.[0-9]\+|image: YOUR_DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }}|g" deployment.yaml
+        sed -i "s|image: DOCKERHUB_USERNAME/atino:v[0-9]\+\.[0-9]\+|image: DOCKERHUB_USERNAME/atino:${{ env.NEW_VERSION }}|g" deployment.yaml
 
     - name: Commit and push changes
       run: |
