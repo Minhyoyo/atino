@@ -23,4 +23,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: DOCKER_USERNAME/my-sample-app:v9
+        tags: DOCKER_USERNAME/atino:v1
