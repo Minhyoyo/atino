@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atino-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: atino
+  template:
+    metadata:
+      labels:
+        app: atino
+    spec:
+      containers:
+        - name: atino
+          image: docker.io/<dockerhub-username>/atino:latest
+          ports:
+            - containerPort: 80
