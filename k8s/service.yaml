@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: atino-service
+spec:
+  selector:
+    app: atino
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
