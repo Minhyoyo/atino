@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: atino
-        image: DOCKERHUB_USERNAME/atino:v1.1  # CI/CD sẽ tự động tăng version
+        image: DOCKER_USERNAME/atino:v1  # CI/CD sẽ tự động tăng version
         ports:
         - containerPort: 80
