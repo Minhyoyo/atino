@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: atino-container
-          image: nguyentrachminh/atino:v2
+          image: nguyentrachminh/atino:v3
           ports:
             - containerPort: 80
 ---
